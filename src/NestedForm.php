@@ -23,7 +23,7 @@ class NestedForm extends Field
     use HasChildren, HasSchema, HasSubfields, HasLimits, HasHeading, CanBeCollapsed, FillsSubAttributes;
 
     /**
-     * Constants for placeholders.
+     * Constants for placeholders. 
      */
     const INDEX = '{{index}}';
     const ATTRIBUTE = '__attribute';
