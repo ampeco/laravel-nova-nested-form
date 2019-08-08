@@ -23,7 +23,7 @@ class NestedForm extends Field
     use HasChildren, HasSchema, HasSubfields, HasLimits, HasHeading, CanBeCollapsed, FillsSubAttributes;
 
     /**
-     * Constants for placeholders.
+     * Constants for placeholders. 
      */
     const INDEX = '{{index}}';
     const ATTRIBUTE = '__attribute';
@@ -132,6 +132,7 @@ class NestedForm extends Field
         $this->resourceName = $resource::uriKey();
         $this->viaRelationship = $this->attribute;
         $this->setRequest();
+        $this->withMeta(['dependencies' => []]);
     }
 
     /**
@@ -289,22 +290,23 @@ class NestedForm extends Field
     }
 
     /**
-     * Adds a dependency
+     * Disable delete button
      *
      * @param $value
      * @return $this
      */
     public function disableDeleteOnChildCount($value)
     {
-        return $this->withMeta([
-            'childCount' => $value
-        ]);
+        return $this->withMeta(['childCount' => $value]);
     }
 
     public function shouldRemoveChildHeading()
     {
-        return $this->withMeta([
-            'shouldRemoveChildHeading' => true
-        ]);
+        return $this->withMeta(['shouldRemoveChildHeading' => true]);
+    }
+    
+    public function emitEventWhenFieldAttributeIncludes($value, $eventName)
+    {
+        return $this->withMeta(['fieldAttributeName' => $value, 'emitEventName' => $eventName]);
     }
 }

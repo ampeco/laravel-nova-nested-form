@@ -1,5 +1,5 @@
 <template>
-  <div class="nested-form-container">
+  <div v-if="dependenciesSatisfied" class="nested-form-container">
     <!-- HEADING -->
     <div class="p-4 border-b border-40 bg-30 flex justify-between items-center">
       <h1 class="text-90 font-normal text-xl">{{field.name}}</h1>
@@ -40,6 +40,45 @@ export default {
 
   components: { NestedFormField },
 
+  data() {
+    return {
+      dependencyValues: {},
+      dependenciesSatisfied: false,
+    }
+  },
+
+  mounted() {
+    if (this.field.dependencies.length > 0) {
+      this.registerDependencyWatchers(this.$root)
+      this.updateDependencyStatus()
+    } else {
+      this.dependenciesSatisfied = true;
+    }
+  },
+
+  created(){
+    //we are communicating with the form via events. Once the job is done we need to send event too.
+    Nova.$on('add-'+this.field.attribute, () => {
+      this.add()
+      Nova.$emit('added-'+this.field.attribute,this.field.children.length)
+    })
+
+    Nova.$on('remove-'+this.field.attribute, () => {
+      this.removeAll()
+      Nova.$emit('removed-'+this.field.attribute)
+    })
+
+    if (this.field.attribute.includes('[connectors]')) {
+      Nova.$emit('connectors-created')
+    }
+  },
+
+  destroyed(){
+    //unsubscribe for all the events before destroying the component is a best practice
+    Nova.$off('add-'+this.field.attribute)
+    Nova.$off('remove-'+this.field.attribute)
+  },
+
   computed: {
     /**
      * Whether or not to display the add button
@@ -58,6 +97,55 @@ export default {
   },
 
   methods: {
+    registerDependencyWatchers(root) {
+      root.$children.forEach(component => {
+        if (this.componentIsDependency(component)) {
+          component.$watch('value', (value) => {
+            this.dependencyValues[component.field.attribute] = value;
+            this.updateDependencyStatus()
+          }, {immediate: true})
+          this.dependencyValues[component.field.attribute] = component.field.value;
+        }
+        this.registerDependencyWatchers(component)
+      })
+    },
+    componentIsDependency(component) {
+      if(component.field === undefined) {
+        return false;
+      }
+
+      for (let dependency of this.field.dependencies) {
+        if (component.field.attribute === dependency.field) {
+          return true;
+        }
+      }
+
+      return false;
+    },
+
+    updateDependencyStatus() {
+      for (let dependency of this.field.dependencies) {
+        if (dependency.hasOwnProperty('value') && this.dependencyValues[dependency.field] !== dependency.value) {
+          this.dependenciesSatisfied = false;
+
+          if (this.$route.name !== 'edit') {
+            this.removeAll();
+          }
+
+          return;
+        }
+      }
+
+      this.dependenciesSatisfied = true;
+      if (this.$route.name !== 'edit' || this.field.children.length === 0) {
+        this.add();
+      }
+    },
+
+    removeAll() {
+      this.field.children = []
+    },
+
     /**
      * This toggles the visibility of the
      * content of the related resource

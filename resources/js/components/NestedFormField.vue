@@ -1,7 +1,7 @@
 <template>
   <div class="nested-form">
     <!-- HEADING -->
-    <div class="p-4 border-b border-40 bg-30 flex justify-between items-center"
+    <div v-if="!field.shouldRemoveChildHeading" class="p-4 border-b border-40 bg-30 flex justify-between items-center"
          :key="`${field.attribute}-${index}`">
       <h1 class="text-90 font-normal text-xl">{{heading}}</h1>
       <div class="flex justify-between items-center">
