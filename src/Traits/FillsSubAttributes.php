@@ -88,9 +88,16 @@ trait FillsSubAttributes
      */
     protected function newRequest(array $data, Model $model, string $attribute, int $index = null)
     {
-        if (isset($data[self::ID])) {
+        if (isset($data[self::ID]) || (isset($data[0]) && isset($data[0][self::ID]))) {
             $request = CustomUpdateResourceRequest::createFrom($this->request);
-            $request->setCustomResource($this->resourceClass, $data[self::ID]);
+
+            if(isset($data[self::ID])){
+                $id = $data[self::ID];
+            } else {
+                $id = $data[0][self::ID];
+                $data[self::ID] = $id;
+            }
+            $request->setCustomResource($this->resourceClass, $id);
         } else {
             $request = CustomCreateResourceRequest::createFrom($this->request);
             $request->setCustomResource($this->resourceClass);
@@ -113,7 +120,7 @@ trait FillsSubAttributes
      */
     protected function controller(array $data)
     {
-        if (isset($data[self::ID])) {
+        if (isset($data[self::ID]) || (isset($data[0]) && isset($data[0][self::ID]))) {
             $controller = ResourceUpdateController::class;
         } else {
             $controller = ResourceStoreController::class;
