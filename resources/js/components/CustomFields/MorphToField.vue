@@ -1,34 +1,19 @@
 <script>
-import BelongsToField from '@/components/Form/BelongsToField'
-import storage from '@/storage/BelongsToFieldStorage'
+import MorphToField from '@/components/Form/MorphToField.vue'
+import storage from '@/storage/MorphToFieldStorage'
+import { Errors } from 'laravel-nova'
 
 export default {
-  mixins: [BelongsToField],
-
+  mixins: [MorphToField],
   methods: {
-    /**
-     * Fill the forms formData with details from this field
-     */
-    fill(formData) {
-      formData.append(
-        this.field.attribute,
-        this.selectedResource ? this.selectedResource.value : ''
-      )
-
-      formData.append(
-        this.field.attribute.replace(/]$/, '_trashed]'),
-        this.withTrashed
-      )
-    },
-
     /**
      * Get the resources that may be related to this resource.
      */
-    getAvailableResources() {
+    getAvailableResources(search = '') {
       return storage
         .fetchAvailableResources(
           this.resourceName,
-          this.field.original_attribute,
+          this.field.originalAttribute,
           this.queryParams
         )
         .then(({ data: { resources, softDeletes, withTrashed } }) => {

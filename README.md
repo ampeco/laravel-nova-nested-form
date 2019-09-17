@@ -1,63 +1,18 @@
-
-[![Latest Stable Version](https://poser.pugx.org/yassi/nova-nested-form/v/stable)](https://packagist.org/packages/yassi/nova-nested-form)
-[![Total Downloads](https://poser.pugx.org/yassi/nova-nested-form/downloads)](https://packagist.org/packages/yassi/nova-nested-form)
-[![Latest Unstable Version](https://poser.pugx.org/yassi/nova-nested-form/v/unstable)](https://packagist.org/packages/yassi/nova-nested-form)
-[![License](https://poser.pugx.org/yassi/nova-nested-form/license)](https://packagist.org/packages/yassi/nova-nested-form)
-[![Monthly Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/monthly)](https://packagist.org/packages/yassi/nova-nested-form)
-[![Daily Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/daily)](https://packagist.org/packages/yassi/nova-nested-form)
+[![Latest Stable Version](https://poser.pugx.org/yassi/nova-nested-form/v/stable)](https://packagist.org/packages/yassi/nova-nested-form) [![Total Downloads](https://poser.pugx.org/yassi/nova-nested-form/downloads)](https://packagist.org/packages/yassi/nova-nested-form) [![Latest Unstable Version](https://poser.pugx.org/yassi/nova-nested-form/v/unstable)](https://packagist.org/packages/yassi/nova-nested-form) [![License](https://poser.pugx.org/yassi/nova-nested-form/license)](https://packagist.org/packages/yassi/nova-nested-form) [![Monthly Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/monthly)](https://packagist.org/packages/yassi/nova-nested-form) [![Daily Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/daily)](https://packagist.org/packages/yassi/nova-nested-form)
 
 # Nova Nested Form
 
 This package allows you to include your nested relationships' forms into a parent form.
-
-# Release note for 2.0.5
-
-- [x] Max number of children
-- [x] Min number of children
-- [x] Set default open/collapse behavior
-- [x] Set heading template
-- [x] Set separator
-- [x] No need for trait anymore
-- [x] Auto detection of parent ID field
-- [x] Catching UpdatedSinceLastRetrieval exception (even for children)
-- [x] AfterFillCallback
-- [x] BeforeFillCallback
-- [x] Updated design for empty relationship
-- [x] Handle file uploads
-- [ ] **COMING** Conditional nested forms
-- [ ] **COMING** Updated design for single field nested form
-
-# Important changes since 1.0.4
-
-To be more consistent with Nova's other fields, the order of the parameters has changed to become:
-
-```php
-NestedForm::make($name, $viaRelationship = null, $class = null),
-```
-
-For instance, this:
-
-```php
-NestedForm::make('Posts'),
-```
-
-Is now the same as:
-
-```php
-NestedForm::make('Posts', 'posts', Post::class),
-```
-
-Also, translations are now available in your nested field! You just need to add this key in you language file:
-
-```json
-"Add a new :resourceSingularName": "Ajouter un(e) :resourceSingularName"
-```
 
 # Installation
 
 ```bash
 composer require yassi/nova-nested-form
 ```
+
+# Update to 3.0
+
+The **afterFill** and **beforeFill** methods are no longer available.
 
 # Attach a new relationship form to a resource
 
@@ -105,29 +60,64 @@ class User extends Resource
     }
 ```
 
-You can also nest your relationship forms by adding another NestedForm into the fields of your App\Nova\Post.
+# Choose when to display the form
 
-# NEW: Add a callback before and/or after your relationships have been updated
-
-For instance, if you have to modify a value on the request before the nested form is filled or trigger an event after all relations have been set, you can now simply use this:
+For instance, if the nested form should only be available if the value of the "has_comments" attirbute is true, you can use:
 
 ```php
-NestedForm::make('Posts')
-->beforeFill(function ($request, $model, $attribute, $requestAttribute) {
-    $request->merge(['key' => 'value']);
-    // or
-    if (!$model->hasSomeProperty) {
-        throw new \Exception('You cannot do this.');
+class Post extends Resource
+{
+    ...
+    public function fields(Request $request)
+    {
+        return [
+            Boolean::make('Has Comments'),
+            NestedForm::make('Comments')->displayIf(function ($nestedForm, $request) {
+               return [
+                    [ 'attribute' => 'has_comments', 'is' => true ]
+               ];
+        ];
     }
 })
-->afterFill(function ($request, $model, $attribute, $requestAttribute, $touched) {
-    $touched->each(function ($model) {
-        if ($model->wasRecentlyCreated) {
-            // do something
-        }
-    });
-})
 ```
+
+The **displayIf** method is excepted to return an array of array as you may want to add several conditions.
+
+```php
+class Post extends Resource
+{
+    ...
+    public function fields(Request $request)
+    {
+        return [
+            Boolean::make('Has Comments'),
+            Text::make('Title'),
+            Text::make('Subtitle')->nullable(),
+            Number::make('Number of comments allowed'),
+            NestedForm::make('Comments')->displayIf(function ($nestedForm, $request) {
+                return [
+                    [ 'attribute' => 'has_comments', 'is' => true ],
+                    [ 'attribute' => 'title', 'isNotNull' => true ],
+                    [ 'attribute' => 'subtitle', 'isNull' => true ],
+                    [ 'attribute' => 'title', 'includes' => 'My' ],
+                    [ 'attribute' => 'number_of_comments_allowed', 'moreThanOrEqual' => 1 ],
+                ];
+            })
+        ];
+    }
+}
+```
+
+The package will then add those conditions and dynamically update your form as you fill the fields. The available rules are:
+
+- [x] is
+- [x] isNot
+- [x] isNull
+- [x] isNotNull
+- [x] isMoreThan
+- [x] isMoreThanOrEqual
+- [x] isLessThan
+- [x] isLessThanOrEqual
 
 # Add a minimum or a maximum number of children
 
@@ -136,6 +126,8 @@ For instance, if you want every user to have at least 3 posts and at most 5 post
 ```php
 NestedForm::make('Posts')->min(3)->max(5),
 ```
+
+Please note that the package automatically detects whether the relationship excepts many children or a single child, and sets the maximum value accordingly.
 
 When creating a new user, 3 blank posts will be displayed. If you reach the maximum number of posts, the "Add a new post" button will disappear.
 
@@ -147,18 +139,18 @@ If you want the nested forms to be opened by default, simply use:
 NestedForm::make('Posts')->open(true),
 ```
 
-You can also decide to open only the first nested form by using:
-
-```php
-NestedForm::make('Posts')->open('only first'),
-```
-
 # Modify the default heading
 
-You can modify the default heading using the heading() method. You can use wildcards to add dynamic content to your label such as '{{id}}', '{{index}}' or any attribute present in the form.
+You can modify the default heading using the heading() method. You can use the helper method **wrapIndex()** to add the current child index to your header.
 
 ```php
-NestedForm::make('Posts')->heading('{{index}} // Post - {{title}}'),
+NestedForm::make('Posts')->heading(NestedForm::wrapIndex() . ' // Post'),
+```
+
+You can also add any attribute of the current child into your heading using the helper method **wrapAttribute()**.
+
+```php
+NestedForm::make('Posts')->heading(NestedForm::wrapIndex() . ' // ' . NestedForm::wrapAttribute('title', 'My default title')),
 ```
 
 # Modify the index separator
