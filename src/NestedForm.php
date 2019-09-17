@@ -557,6 +557,16 @@ class NestedForm extends Field
         return self::WRAP_LEFT . self::INDEX . self::WRAP_RIGHT;
     }
 
+    public function disableDeleteOnChildCount($value)
+    {
+        return $this->withMeta(['childCount' => $value]);
+    }
+
+    public function shouldRemoveChildHeading()
+    {
+        return $this->withMeta(['shouldRemoveChildHeading' => true]);
+    }
+
     /**
      * Prepare the field for JSON serialization.
      *

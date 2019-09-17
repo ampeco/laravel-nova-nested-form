@@ -435,6 +435,7 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 //
 //
 //
+//
 
 
 
@@ -30759,9 +30760,11 @@ var render = function() {
                       }
                     },
                     [
-                      _c("nested-form-header", {
-                        attrs: { child: child, field: _vm.field }
-                      }),
+                      !_vm.field.shouldRemoveChildHeading
+                        ? _c("nested-form-header", {
+                            attrs: { child: child, field: _vm.field }
+                          })
+                        : _vm._e(),
                       _vm._v(" "),
                       _vm._l(child.fields, function(
                         childField,

@@ -10,6 +10,7 @@
           <nested-form-header
                   :child="child"
                   :field="field"
+                  v-if="!field.shouldRemoveChildHeading"
           />
           <component
                   :conditions="conditions"
