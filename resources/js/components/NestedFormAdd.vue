@@ -77,6 +77,16 @@ export default {
     for (let i = this.field.children.length; i < this.field.min; i++) {
       this.addChild()
     }
-  }
+
+    Nova.$on('add-'+this.field.attribute, () => {
+      this.addChild()
+      Nova.$emit('added-'+this.field.attribute,this.field.children.length)
+    })
+  },
+
+  destroyed(){
+    //unsubscribe for all the events before destroying the component is a best practice
+    Nova.$off('add-'+this.field.attribute)
+  },
 }
 </script>

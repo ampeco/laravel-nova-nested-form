@@ -219,7 +219,11 @@
         if (this.field.displayIf) {
           this.setAllAttributeWatchers(this.$root)
         }
-      }
+      },
+
+      removeAll() {
+        this.field.children = []
+      },
     },
 
     watch: {
@@ -232,6 +236,28 @@
       if (this.field.displayIf) {
         this.setConditions()
       }
-    }
+    },
+
+    created(){
+      //we are communicating with the form via events. Once the job is done we need to send event too.
+      // Nova.$on('add-'+this.field.attribute, () => {
+      //   this.add()
+      //   Nova.$emit('added-'+this.field.attribute,this.field.children.length)
+      // })
+      Nova.$on('remove-'+this.field.attribute, () => {
+        this.removeAll()
+        Nova.$emit('removed-'+this.field.attribute)
+      })
+      if (this.field.attribute.includes('[connectors]')) {
+        Nova.$emit('connectors-created')
+      }
+    },
+
+    destroyed(){
+      //unsubscribe for all the events before destroying the component is a best practice
+      console.log('removing add-remove-'+this.field.attribute)
+      Nova.$off('add-'+this.field.attribute)
+      Nova.$off('remove-'+this.field.attribute)
+    },
   }
 </script>

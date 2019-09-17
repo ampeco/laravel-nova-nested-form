@@ -249,7 +249,7 @@ class NestedForm extends Field
      *
      * @param boolean $opened
      */
-    public function open(boolean $opened)
+    public function open($opened)
     {
         $this->opened = $opened;
 

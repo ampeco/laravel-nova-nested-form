@@ -340,9 +340,21 @@ __webpack_require__.r(__webpack_exports__);
    * On created.
    */
   created: function created() {
+    var _this2 = this;
+
     for (var i = this.field.children.length; i < this.field.min; i++) {
       this.addChild();
     }
+
+    Nova.$on('add-' + this.field.attribute, function () {
+      _this2.addChild();
+
+      Nova.$emit('added-' + _this2.field.attribute, _this2.field.children.length);
+    });
+  },
+  destroyed: function destroyed() {
+    //unsubscribe for all the events before destroying the component is a best practice
+    Nova.$off('add-' + this.field.attribute);
   }
 });
 
@@ -631,6 +643,9 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
       if (this.field.displayIf) {
         this.setAllAttributeWatchers(this.$root);
       }
+    },
+    removeAll: function removeAll() {
+      this.field.children = [];
     }
   },
   watch: {
@@ -642,6 +657,30 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
     if (this.field.displayIf) {
       this.setConditions();
     }
+  },
+  created: function created() {
+    var _this4 = this;
+
+    //we are communicating with the form via events. Once the job is done we need to send event too.
+    // Nova.$on('add-'+this.field.attribute, () => {
+    //   this.add()
+    //   Nova.$emit('added-'+this.field.attribute,this.field.children.length)
+    // })
+    Nova.$on('remove-' + this.field.attribute, function () {
+      _this4.removeAll();
+
+      Nova.$emit('removed-' + _this4.field.attribute);
+    });
+
+    if (this.field.attribute.includes('[connectors]')) {
+      Nova.$emit('connectors-created');
+    }
+  },
+  destroyed: function destroyed() {
+    //unsubscribe for all the events before destroying the component is a best practice
+    console.log('removing add-remove-' + this.field.attribute);
+    Nova.$off('add-' + this.field.attribute);
+    Nova.$off('remove-' + this.field.attribute);
   }
 });
 
