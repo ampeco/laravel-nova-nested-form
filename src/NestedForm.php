@@ -174,6 +174,8 @@ class NestedForm extends Field
      */
     protected $returnContext;
 
+    protected $filledRequests;
+
     /**
      * Create a new nested form.
      *
@@ -195,6 +197,7 @@ class NestedForm extends Field
         $this->keyName = (new $this->resourceClass::$model)->getKeyName();
         $this->viaResource = app(NovaRequest::class)->route('resource');
         $this->returnContext = $this;
+        $this->filledRequests = collect([]);
     }
 
     /**
@@ -340,47 +343,12 @@ class NestedForm extends Field
             $this->createOrUpdateChildren($newRequest, $model, $children, $requestAttribute, $this->getRelatedKeys($newRequest));
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
-                $shouldFill = true;
-                foreach($model->toArray() as $key => $value){
-                    if (in_array($key,['created_at', 'updated_at', 'id'])) {
-                        continue;
-                    }
-
-                    if (array_key_exists($key, $model->relationsToArray()) || (Str::contains($key, '_id') && array_key_exists(str_replace('_id','',$key), $model->relationsToArray()))) {
-                        if (!Str::contains($key, '_id')) {
-                            continue;
-                        }
-
-                        $replaced = str_replace('_id','',$key);
-                        $replacedCamelCase = camel_case($replaced);
-
-                        if($request->has(strtolower($replacedCamelCase))){
-                            if($request->get(strtolower($replacedCamelCase)) != $value){
-                                $shouldFill = false;
-                                break;
-                            }
-                        }
-
-                        if($request->has($replacedCamelCase)){
-                            if($request->get($replacedCamelCase) != $value){
-                                $shouldFill = false;
-                                break;
-                            }
-                        }
-
-
-                        continue;
-                    }
-
-                    if ($request->get($key) != $value){
-                        $shouldFill = false;
-                        break;
-                    }
+                if($this->filledRequests->contains(json_encode($request->all()))){
+                    return;
                 }
 
-                if($shouldFill){
-                    $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
-                }
+                $this->filledRequests->add(json_encode($request->all()));
+                $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
             });
         }
     }
