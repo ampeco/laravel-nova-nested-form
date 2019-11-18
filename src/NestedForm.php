@@ -2,6 +2,7 @@
 
 namespace Yassi\NestedForm;
 
+use Eminiarts\Tabs\Tabs;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -345,16 +346,33 @@ class NestedForm extends Field
                         continue;
                     }
 
-                    if (Str::contains($key, '_id')) {
-                        $replaced = str_replace('_id','',$key);
-                        if($request->get($replaced) !== $value){
-                            $shouldFill = false;
-                            break;
+                    if (array_key_exists($key, $model->relationsToArray()) || (Str::contains($key, '_id') && array_key_exists(str_replace('_id','',$key), $model->relationsToArray()))) {
+                        if (!Str::contains($key, '_id')) {
+                            continue;
                         }
+
+                        $replaced = str_replace('_id','',$key);
+                        $replacedCamelCase = camel_case($replaced);
+
+                        if($request->has(strtolower($replacedCamelCase))){
+                            if($request->get(strtolower($replacedCamelCase)) != $value){
+                                $shouldFill = false;
+                                break;
+                            }
+                        }
+
+                        if($request->has($replacedCamelCase)){
+                            if($request->get($replacedCamelCase) != $value){
+                                $shouldFill = false;
+                                break;
+                            }
+                        }
+
+
                         continue;
                     }
 
-                    if ($request->get($key) !== $value){
+                    if ($request->get($key) != $value){
                         $shouldFill = false;
                         break;
                     }
@@ -364,7 +382,6 @@ class NestedForm extends Field
                     $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
                 }
             });
-
         }
     }
 
@@ -387,7 +404,19 @@ class NestedForm extends Field
      */
     protected function getRelatedKeys(NovaRequest $request)
     {
-        $field = collect(Nova::resourceInstanceForKey($this->resourceName)->fields($request))->first(function ($field) {
+        $fields = Nova::resourceInstanceForKey($this->resourceName)->fields($request);
+        $collection = collect([]);
+
+        foreach($fields as $item){
+            if($item instanceof Tabs){
+                $collection = $collection->merge($item->data);
+            } else {
+                $collection->add($item);
+            }
+        }
+
+
+        $field = $collection->first(function ($field) {
             return $this->isRelatedField($field);
         });
 
