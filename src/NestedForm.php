@@ -335,13 +335,36 @@ class NestedForm extends Field
         if ($model->exists) {
             $newRequest = NovaRequest::createFrom($request);
             $children = collect($newRequest->get($requestAttribute));
-            $newRequest->route()->setParameter('resource', $this->resourceName);
             $this->deleteChildren($newRequest, $model, $children);
             $this->createOrUpdateChildren($newRequest, $model, $children, $requestAttribute, $this->getRelatedKeys($newRequest));
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
-                $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
+                $shouldFill = true;
+                foreach($model->toArray() as $key => $value){
+                    if (in_array($key,['created_at', 'updated_at', 'id'])) {
+                        continue;
+                    }
+
+                    if (Str::contains($key, '_id')) {
+                        $replaced = str_replace('_id','',$key);
+                        if($request->get($replaced) !== $value){
+                            $shouldFill = false;
+                            break;
+                        }
+                        continue;
+                    }
+
+                    if ($request->get($key) !== $value){
+                        $shouldFill = false;
+                        break;
+                    }
+                }
+
+                if($shouldFill){
+                    $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
+                }
             });
+
         }
     }
 
@@ -424,6 +447,8 @@ class NestedForm extends Field
     {
         $children->each(function ($child, $index) use ($request, $model, $requestAttribute, $relatedKeys) {
             try {
+                $request->route()->setParameter('resource', $this->resourceName);
+
                 if (isset($child[$this->keyName])) {
                     return $this->updateChild($request, $model, $child, $index, $requestAttribute, $relatedKeys);
                 }

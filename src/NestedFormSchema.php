@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use JsonSerializable;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Fields\File;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
@@ -140,7 +141,7 @@ class NestedFormSchema implements JsonSerializable
 
         $method->setAccessible(true);
 
-        return $method->invoke($this->resourceInstance(), $this->request, collect($this->resourceInstance()->fields($this->request))
+        return $method->invoke($this->resourceInstance(), $this->request, (new FieldCollection($this->resourceInstance()->fields($this->request)))
             ->reject(function ($field) {
                 return $this->parentForm->isRelatedField($field);
             })->map(function ($field) {
