@@ -427,15 +427,6 @@ function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
 
 
 
@@ -30743,12 +30734,12 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _c(
-    "div",
-    { staticClass: "relative" },
-    [
-      _vm.shouldDisplay()
-        ? [
+  return _vm.shouldDisplay()
+    ? _c(
+        "div",
+        { staticClass: "relative" },
+        [
+          [
             _vm.field.children.length > 0
               ? _vm._l(_vm.field.children, function(child, childIndex) {
                   return _c(
@@ -30831,28 +30822,10 @@ var render = function() {
                   1
                 )
           ]
-        : _c(
-            "div",
-            { staticClass: "flex flex-col p-8 items-center justify-center" },
-            [
-              _c(
-                "p",
-                { staticClass: "text-center my-4 font-bold text-80 text-xl" },
-                [
-                  _vm._v(
-                    _vm._s(
-                      _vm.__("You cannot add :pluralLabel.", {
-                        pluralLabel: _vm.field.pluralLabel
-                      })
-                    )
-                  )
-                ]
-              )
-            ]
-          )
-    ],
-    2
-  )
+        ],
+        2
+      )
+    : _vm._e()
 }
 var staticRenderFns = []
 render._withStripped = true

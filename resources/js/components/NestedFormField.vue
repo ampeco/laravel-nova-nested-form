@@ -1,6 +1,6 @@
 <template>
-  <div class="relative">
-    <template v-if="shouldDisplay()">
+  <div v-if="shouldDisplay()" class="relative">
+    <template>
       <template v-if="field.children.length > 0">
         <card
                 :class="{ 'overflow-hidden': field.panel && !index }"
@@ -41,15 +41,6 @@
         <nested-form-add :field="field" />
       </div>
     </template>
-
-    <div
-            class="flex flex-col p-8 items-center justify-center"
-            v-else
-    >
-      <p
-              class="text-center my-4 font-bold text-80 text-xl"
-      >{{__('You cannot add :pluralLabel.', { pluralLabel: field.pluralLabel })}}</p>
-    </div>
   </div>
 </template>
 
