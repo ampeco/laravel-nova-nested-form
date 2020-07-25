@@ -589,6 +589,14 @@ class NestedForm extends Field
         return $this->withMeta(['shouldRemoveChildHeading' => true]);
     }
 
+    public function hideChildUnless($selector, $value)
+    {
+        return $this->withMeta(['hideChildUnless' => [
+            'selector' => $selector,
+            'value' => $value
+        ]]);
+    }
+
     /**
      * Prepare the field for JSON serialization.
      *
