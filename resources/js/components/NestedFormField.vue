@@ -26,7 +26,7 @@
                   :via-resource-id="field.viaResourceId"
                   @file-deleted="$emit('file-deleted')"
                   v-for="(childField, childFieldIndex) in child.fields"
-                  v-show="child.opened"
+                  v-show="child.opened && shouldDisplayChild(childField, field)"
           />
         </card>
       </template>
@@ -112,6 +112,18 @@
        */
       handleChange(value) {
         this.value = value
+      },
+
+      shouldDisplayChild(child, field) {
+        if (field.hideChildUnless && field.hideChildUnless.selector && field.hideChildUnless.value && $(field.hideChildUnless.selector).val() !== field.hideChildUnless.value){
+          return true;
+        }
+
+        if (child.hideFromNestedForm === true) {
+          return false;
+        }
+
+        return true;
       },
 
       /**
